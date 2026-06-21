@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthBot AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1; /* Indigo */
+            --primary-light-color: #818cf8;
+            --primary-dark-color: #4338ca;
+            --background-color: #eef2ff; /* Light Indigo background */
+            --chat-bg-color: #ffffff;
+            --header-bg-color: linear-gradient(to right, #6366f1, #8b5cf6); /* Gradient */
+            --ai-bubble-bg: #f3f4f6; /* Lighter gray */
+            --user-bubble-bg: var(--primary-color);
+            --border-color: #e5e7eb;
+            --text-color: #1f2937;
+            --secondary-text-color: #6b7280;
+            --sidebar-bg: #fdfefe;
+            --card-bg: #ffffff;
+        }
+
+        /* Styles for full-screen view */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            transition: background-color 0.3s ease;
+        }
+
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            margin: 0;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+            background: var(--chat-bg-color);
+            position: relative;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .sidebar-card {
+            background-color: var(--card-bg);
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 15px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
+
+        .sidebar-card-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-card-title .material-icons {
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        /* Corrected alignment for quick actions */
+        .quick-action-item, .recent-topic-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--secondary-text-color);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .quick-action-item .material-icons {
+            margin-right: 0.75rem;
+            font-size: 1.3rem;
+            min-width: 1.3rem; /* Ensures icon alignment */
+        }
+        
+        .quick-action-item:hover, .recent-topic-item:hover {
+            background-color: var(--background-color);
+            color: var(--primary-dark-color);
+            transform: translateX(5px);
+        }
+
+        .recent-topic-item {
+            justify-content: space-between;
+        }
+
+        .chat-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 1.5rem 2rem;
+            background: var(--chat-bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .chat-header-info h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .chat-header-info p {
+            font-size: 0.85rem;
+            color: #22c55e;
+            margin-top: 0.1rem;
+        }
+
+        .chat-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .chat-header-actions button, .chat-header-actions select {
+            background-color: var(--ai-bubble-bg);
+            border: 1px solid #cbd5e1;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            color: var(--secondary-text-color);
+            transition: all 0.2s ease;
+        }
+        .chat-header-actions button:hover, .chat-header-actions select:hover {
+            background-color: #e2e8f0;
+            color: var(--text-color);
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            background: #f9fafb;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-light-color) #e5e7eb;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #e5e7eb;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background-color: var(--primary-light-color);
+            border-radius: 20px;
+            border: 2px solid #f9fafb;
+        }
+
+        .message-bubble {
+            max-width: 85%;
+            padding: 1.25rem 1.75rem;
+            border-radius: 1.5rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            animation: slideIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background-color: var(--user-bubble-bg);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 0.5rem;
+        }
+
+        .ai-message {
+            background-color: var(--ai-bubble-bg);
+            color: var(--text-color);
+            margin-right: auto;
+            border-bottom-left-radius: 0.5rem;
+        }
+
+        .quick-reply-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        
+        .quick-reply-chip {
+            background-color: #e0e7ff;
+            color: var(--primary-dark-color);
+            padding: 0.6rem 1.2rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid #c7d2fe;
+        }
+        .quick-reply-chip:hover {
+            background-color: #c7d2fe;
+            color: var(--primary-dark-color);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-input-area {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background-color: var(--chat-bg-color);
+            border-top: 1px solid var(--border-color);
+            box-shadow: 0 -4px 15px -5px rgba(0, 0, 0, 0.05);
+            flex-direction: column;
+        }
+        
+        .input-controls-bottom {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            border-radius: 9999px;
+            border: 1px solid #d1d5db;
+            padding: 1rem 1.75rem;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25);
+            background: white;
+        }
+
+        .send-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+        }
+
+        .send-button:hover {
+            background-color: var(--primary-dark-color);
+        }
+
+        .send-button:active {
+            transform: scale(0.96);
+        }
+
+        .input-button {
+            background-color: #ffffff;
+            color: var(--secondary-text-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .input-button:hover {
+            background-color: #f1f5f9;
+            color: var(--primary-color);
+        }
+
+        .input-button:active {
+            transform: scale(0.92);
+        }
+
+        .mic-button.recording {
+            animation: pulse-recording 1.5s infinite;
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        @keyframes pulse-recording {
+            0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+
+        .disclaimer-bottom {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            padding: 0.75rem;
+            background-color: var(--chat-bg-color);
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 2rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            color: #6b7280;
+        }
+
+        .typing-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #9ca3af;
+            border-radius: 50%;
+            margin-left: 6px;
+            animation: bounce 1s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Modal styling */
+        .modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90%;
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.9);
+            opacity: 0;
+            animation: modalFadeIn 0.4s forwards;
+        }
+
+        @keyframes modalFadeIn {
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .close-button {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            font-size: 2rem;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .close-button:hover { color: #ef4444; }
+
+        .category-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .category-tab {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 9999px;
+            background-color: #e5e7eb;
+            color: #6b7280;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .category-tab.active, .category-tab:hover {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .library-article {
+            background-color: #f9fafb;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .library-article:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .photo-preview {
+            max-width: 100%;
+            height: auto;
+            border-radius: 1rem;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .medical-disclaimer {
+            background-color: #fffbeb;
+            color: #d97706;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            border: 1px solid #fcd34d;
+        }
+        .medical-disclaimer .material-icons {
+            font-size: 1.25rem;
+            color: #f59e0b;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                display: none;
+            }
+            .app-container {
+                max-width: 768px;
+                border-radius: 0;
+                height: 100vh;
+            }
+            .chat-header {
+                border-radius: 0;
+            }
+            .input-controls-top {
+                flex-direction: column;
+            }
+            .quick-reply-chip {
+                width: fit-content;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        
+        <div class="sidebar">
+            <div class="flex items-center mb-6">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800">HealthBot AI</h1>
+                    <p class="text-sm text-gray-500">Public Health Assistant</p>
+                </div>
+            </div>
+
+            <div class="medical-disclaimer">
+                <span class="material-icons">info</span>
+                <span>Medical Disclaimer: This chatbot provides general health information only. Always consult healthcare professionals for medical advice.</span>
+            </div>
+
+            <div class="sidebar-card">
+                <h3 class="sidebar-card-title"><span class="material-icons">flash_on</span>Quick Actions</h3>
+                <div class="space-y-2">
+                    <div class="quick-action-item" onclick="startSymptomChecker()">
+                        <span class="material-icons" style="color:#22c55e;">healing</span> Symptom Checker
+                    </div>
+                    <div class="quick-action-item" onclick="openDiseaseInfo()">
+                        <span class="material-icons" style="color:#f59e0b;">local_hospital</span> Disease Information
+                    </div>
+                    <div class="quick-action-item" onclick="openPreventionTips()">
+                        <span class="material-icons" style="color:#3b82f6;">security</span> Prevention Tips
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-card">
+                <h3 class="sidebar-card-title"><span class="material-icons">history</span>Recent Topics</h3>
+                <div class="space-y-2">
+                    <div class="recent-topic-item"><span>What are the symptoms of dengue fever?</span><span class="text-xs text-gray-400">2 hours ago</span></div>
+                    <div class="recent-topic-item"><span>How can I prevent diabetes?</span><span class="text-xs text-gray-400">3 hours ago</span></div>
+                    <div class="recent-topic-item"><span>What are the benefits of regular exercise?</span><span class="text-xs text-gray-400">5 hours ago</span></div>
+                </div>
+            </div>
+
+            <div class="sidebar-card mt-auto"> 
+                <h3 class="sidebar-card-title"><span class="material-icons">favorite</span>Daily Health Tip</h3>
+                <p class="text-gray-600 text-sm">
+                    Drink at least 8 glasses of water daily to maintain proper hydration and support overall health.
+                </p>
+            </div>
+        </div>
+
+        
+        <div class="chat-main">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <div>
+                        <h2>Health Assistant</h2>
+                        <p>Online</p>
+                    </div>
+                </div>
+                <div class="chat-header-actions">
+                    <button id="learn-button">Learn More</button>
+                    <select id="language-selector">
+                        <option value="en-US">English</option>
+                        <option value="hi-IN">हिन्दी</option>
+                        <option value="mr-IN">मराठी</option>
+                        <option value="te-IN">తెలుగు</option>
+                        <option value="es-ES">Español</option>
+                        <option value="gu-IN">ગુજરાતી</option>
+                        <option value="tcy-IN">ತುಳು</option>
+                        <option value="or-IN">ଓଡ଼ିଆ</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="chat-messages" class="chat-messages flex flex-col space-y-6 overflow-y-auto">
+                <div class="message-bubble ai-message">
+                    Hello! I'm your AI health assistant. I can help you with disease information, symptom checking, prevention tips, and general health queries. How can I assist you today?
+                    <div class="quick-reply-chips">
+                        <span class="quick-reply-chip" onclick="simulateUserMessage('Check symptoms')">Check symptoms</span>
+                        <span class="quick-reply-chip" onclick="simulateUserMessage('Disease info')">Disease info</span>
+                        <span class="quick-reply-chip" onclick="simulateUserMessage('Prevention tips')">Prevention tips</span>
+                    </div>
+                    <p class="mt-4 text-xs text-gray-500 italic">
+                        Disclaimer: I am not a medical professional and cannot provide medical advice. Please consult a qualified healthcare professional for any health concerns.
+                    </p>
+                </div>
+            </div>
+
+            <div id="typing-indicator" class="typing-indicator hidden">
+                <span>AI is typing</span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+            </div>
+
+            <div class="chat-input-area">
+                
+                <div class="input-controls-bottom">
+                    <button id="speech-button" class="input-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path d="M8.25 4.5a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 .75.75v11.25a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V4.5ZM16.5 6a.75.75 0 0 0-.75.75v11.25a.75.75 0 0 0 .75.75h4.5a.75.75 0 0 0 .75-.75V6.75a.75.75 0 0 0-.75-.75h-4.5ZM3.75 9a.75.75 0 0 0-.75.75v11.25a.75.75 0 0 0 .75.75h4.5a.75.75 0 0 0 .75-.75V9.75a.75.75 0 0 0-.75-.75h-4.5Z" />
+                        </svg>
+                    </button>
+                    
+                    <button id="photo-button" class="input-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 0 1 2.25-2.25h16.5A2.25 2.25 0 0 1 22.5 6v12a2.25 2.25 0 0 1-2.25 2.25H3.75A2.25 2.25 0 0 1 1.5 18V6ZM3 16.09v-7.18l5.247 5.247a.75.75 0 0 0 1.06 0L14.25 9.75l5.003 5.003a.75.75 0 0 0 1.06-1.06l-5.77-5.769a.75.75 0 0 0-1.06 0L8.25 12.25l-4.52-4.522a.75.75 0 0 0-1.06 0L3 16.09Z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <input type="file" id="photo-input" accept="image/*" class="hidden">
+                    
+                    <input type="text" id="user-input" class="chat-input" placeholder="Type your health question... ">
+                    <button id="send-button" class="send-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405Z" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="disclaimer-bottom mt-2">
+                    <span class="material-icons text-sm mr-1">lock</span>Your privacy is protected. Messages are processed securely and not stored permanently.
+                </p>
+            </div>
+
+            <div id="library-modal" class="modal">
+                <div class="modal-content">
+                    <span id="close-modal" class="close-button">&times;</span>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Disease Awareness Library</h2>
+                    <div class="category-tabs" id="category-tabs">
+                        <div class="category-tab active" data-category="communicable">Communicable</div>
+                        <div class="category-tab" data-category="non-communicable">Non-Communicable</div>
+                        <div class="category-tab" data-category="lifestyle">Lifestyle</div>
+                    </div>
+                    <div id="library-content" class="text-gray-700">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = "AIzaSyDlgt7T3jluBZTQWncNATiX_yZwg7lFLfo";
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + API_KEY;
+
+        const systemMessage = "You are an AI-driven public health awareness assistant. Your purpose is to provide general, factual information about public health, diseases, and wellness. If a user uploads an image, analyze it for visible public health relevance, such as an infographic, a plant, or general scenery. DO NOT under any circumstances provide a medical diagnosis or analyze medical images of skin, wounds, rashes, or any other private health information. Always direct the user to consult a healthcare professional. You MUST NOT provide medical advice, diagnoses, or treatment plans. Always remind users to consult a healthcare professional.";
+
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const languageSelector = document.getElementById('language-selector');
+        const speechButton = document.getElementById('speech-button');
+        const learnButton = document.getElementById('learn-button');
+        const libraryModal = document.getElementById('library-modal');
+        const closeModalButton = document.getElementById('close-modal');
+        const categoryTabs = document.getElementById('category-tabs');
+        const libraryContent = document.getElementById('library-content');
+
+        const photoButton = document.getElementById('photo-button');
+        const photoInput = document.getElementById('photo-input');
+
+        let isLastInputSpeech = false;
+        let symptomCheckerState = 0;
+        let symptomResponses = {};
+        let uploadedImage = null;
+
+        const synth = window.speechSynthesis;
+        let speaking = false;
+
+        function speakText(text, lang) {
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            utterance.onstart = () => {
+                speaking = true;
+            };
+            utterance.onend = () => {
+                speaking = false;
+            };
+            utterance.onerror = (event) => {
+                console.error('Speech synthesis error:', event.error);
+                speaking = false;
+            };
+            synth.speak(utterance);
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        let isRecording = false;
+        let currentLanguage = 'en-US';
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.interimResults = false;
+            recognition.lang = currentLanguage;
+
+            recognition.onstart = () => {
+                if (speaking) synth.cancel();
+                isRecording = true;
+                speechButton.classList.add('recording');
+                userInput.placeholder = "Listening...";
+            };
+
+            recognition.onresult = (event) => {
+                const speechResult = event.results[0][0].transcript;
+                userInput.value = speechResult;
+                isLastInputSpeech = true;
+                stopSpeechRecognition();
+                setTimeout(sendMessage, 500);
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                speechButton.classList.remove('recording');
+                userInput.placeholder = "Type your health question... ";
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                stopSpeechRecognition();
+                addMessageToChat('Could not recognize speech. Please try again.', 'ai');
+            };
+
+            function startSpeechRecognition() {
+                if (!isRecording) {
+                    recognition.start();
+                }
+            }
+
+            function stopSpeechRecognition() {
+                if (isRecording) {
+                    recognition.stop();
+                }
+            }
+
+            speechButton.addEventListener('click', () => {
+                if (isRecording) {
+                    stopSpeechRecognition();
+                } else {
+                    startSpeechRecognition();
+                }
+            });
+
+            languageSelector.addEventListener('change', (event) => {
+                currentLanguage = event.target.value;
+                recognition.lang = currentLanguage;
+                const selectedLangName = event.target.options[event.target.selectedIndex].text;
+                addMessageToChat(`Language set to ${selectedLangName}`, 'ai');
+            });
+
+        } else {
+            speechButton.style.display = 'none';
+            console.warn('Web Speech API is not supported by this browser.');
+        }
+
+        photoButton.addEventListener('click', () => {
+            photoInput.click();
+        });
+
+        photoInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImage = e.target.result;
+                    addMessageToChat('<img src="' + uploadedImage + '" class="photo-preview"/>', 'user');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function sendMessage() {
+            const userMessage = userInput.value.trim();
+            if (userMessage === "" && !uploadedImage) return;
+
+            const userUsedSpeech = isLastInputSpeech;
+            isLastInputSpeech = false;
+
+            const lowerCaseMessage = userMessage.toLowerCase();
+            if (symptomCheckerState > 0) {
+                if (lowerCaseMessage === 'cancel' || lowerCaseMessage === 'exit') {
+                    symptomCheckerState = 0;
+                    addMessageToChat("Symptom checker cancelled. How else can I help you?", 'ai');
+                    if (userUsedSpeech) speakText("Symptom checker cancelled. How else can I help you?", languageSelector.value);
+                    return;
+                }
+
+                switch (symptomCheckerState) {
+                    case 1:
+                        symptomResponses.fever = lowerCaseMessage;
+                        addMessageToChat("Okay. Are you also experiencing a persistent cough? Please answer with 'yes' or 'no'.", 'ai');
+                        if (userUsedSpeech) speakText("Okay. Are you also experiencing a persistent cough? Please answer with 'yes' or 'no'.", languageSelector.value);
+                        symptomCheckerState = 2;
+                        break;
+                    case 2:
+                        symptomResponses.cough = lowerCaseMessage;
+                        addMessageToChat("Thank you. Please tell me what other symptoms you have (e.g., headache, body aches, sore throat).", 'ai');
+                        if (userUsedSpeech) speakText("Thank you. Please tell me what other symptoms you have (e.g., headache, body aches, sore throat).", languageSelector.value);
+                        symptomCheckerState = 3;
+                        break;
+                    case 3:
+                        symptomResponses.other = lowerCaseMessage;
+                        let resultMessage = "Based on your symptoms, you might have a common respiratory infection like the cold or flu. It's important to rest and drink plenty of fluids.\n\n" +
+                            "Disclaimer: This is for informational purposes only. The best course of action is to **consult a doctor or qualified healthcare professional** for a proper diagnosis and treatment plan.";
+
+                        if (symptomResponses.fever.includes('no') && symptomResponses.cough.includes('no')) {
+                            resultMessage = "Based on your symptoms, you might have a non-respiratory issue. Given the general nature of your symptoms, a professional diagnosis is crucial.\n\n" +
+                                "Disclaimer: This is for informational purposes only. The best course of action is to **consult a doctor or qualified healthcare professional** for a proper diagnosis and treatment plan.";
+                        }
+
+                        addMessageToChat(resultMessage, 'ai');
+                        if (userUsedSpeech) speakText(resultMessage, languageSelector.value);
+
+                        symptomCheckerState = 0;
+                        symptomResponses = {};
+                        break;
+                }
+                return;
+            }
+
+            if (lowerCaseMessage.includes('symptom check') || lowerCaseMessage.includes('symptom checker')) {
+                symptomCheckerState = 1;
+                addMessageToChat("I can help with that. Please tell me if you have a fever. Just answer with 'yes' or 'no'.", 'ai');
+                if (userUsedSpeech) speakText("I can help with that. Please tell me if you have a fever. Just answer with 'yes' or 'no'.", languageSelector.value);
+                return;
+            }
+
+            showTypingIndicator();
+            addMessageToChat(userMessage, 'user'); // Add user message instantly
+            userInput.value = '';
+
+            const selectedLanguage = languageSelector.options[languageSelector.selectedIndex].text;
+            const systemMessageWithLanguage = `${systemMessage} Respond only in ${selectedLanguage}.`;
+
+            const parts = [];
+            parts.push({
+                text: systemMessageWithLanguage + "\n\nUser: " + userMessage
+            });
+
+            if (uploadedImage) {
+                const mimeType = uploadedImage.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);/)[1];
+                const base64Data = uploadedImage.split(',')[1];
+                parts.push({
+                    inlineData: {
+                        data: base64Data,
+                        mimeType: mimeType
+                    }
+                });
+                uploadedImage = null;
+            }
+
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: parts
+                }]
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API error: ${response.status} - ${errorText}`);
+                }
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+                if (candidate?.content?.parts?.[0]?.text) {
+                    const aiResponse = candidate.content.parts[0].text;
+                    addMessageToChat(aiResponse, 'ai');
+
+                    if (userUsedSpeech) {
+                        const langCode = languageSelector.value;
+                        speakText(aiResponse, langCode);
+                    }
+                } else {
+                    addMessageToChat("I'm sorry, I couldn't generate a response. Please try again.", 'ai');
+                }
+            } catch (error) {
+                addMessageToChat(`Error: ${error.message}`, 'ai');
+                console.error(error);
+            } finally {
+                hideTypingIndicator();
+            }
+        }
+
+        function addMessageToChat(textOrHtml, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message-bubble', sender === 'user' ? 'user-message' : 'ai-message');
+
+            if (textOrHtml.startsWith('<')) {
+                messageElement.innerHTML = textOrHtml;
+            } else {
+                messageElement.innerText = textOrHtml;
+            }
+
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            typingIndicator.classList.remove('hidden');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            typingIndicator.classList.add('hidden');
+        }
+
+        sendButton.addEventListener('click', () => {
+            isLastInputSpeech = false;
+            sendMessage();
+        });
+        userInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                isLastInputSpeech = false;
+                sendMessage();
+            }
+        });
+
+        // Sidebar Quick Actions
+        function startSymptomChecker() {
+            simulateUserMessage('Start symptom checker');
+        }
+
+        function openDiseaseInfo() {
+            learnButton.click(); // Trigger the learn button to open modal
+            document.querySelector('.category-tab[data-category="communicable"]').click(); // Default to communicable
+        }
+
+        function openPreventionTips() {
+            learnButton.click(); // Trigger the learn button to open modal
+            document.querySelector('.category-tab[data-category="lifestyle"]').click(); // Default to lifestyle for prevention tips
+        }
+        
+        // Function to simulate a user message when a quick action chip is clicked
+        function simulateUserMessage(message) {
+            userInput.value = message;
+            sendMessage();
+        }
+
+        const libraryData = {
+            communicable: {
+                title: "Communicable Diseases",
+                description: "These diseases are caused by infectious agents and can be transmitted from person to person.",
+                articles: [
+                    {
+                        title: "The Common Cold & Flu",
+                        content: "The flu and common cold are both respiratory illnesses, but they are caused by different viruses. The flu is more severe and can lead to serious complications. Symptoms include fever, body aches, fatigue, and a cough. Wash your hands frequently and get vaccinated to prevent their spread.",
+                        faq: "Q: How long is the flu contagious? A: For about 5-7 days after symptoms start."
+                    },
+                    {
+                        title: "COVID-19 Awareness",
+                        content: "COVID-19 is a respiratory disease caused by the SARS-CoV-2 virus. Symptoms range from mild to severe, including fever, cough, and loss of taste or smell. Prevention includes vaccination, mask-wearing, and social distancing.",
+                        faq: "Q: Is COVID-19 airborne? A: Yes, it can be spread through tiny droplets in the air."
+                    },
+                    {
+                        title: "Tuberculosis (TB)",
+                        content: "Tuberculosis is a bacterial infection that mainly affects the lungs. It is spread through the air when an infected person coughs or sneezes. Symptoms include a persistent cough, fever, night sweats, and weight loss. Prevention involves early diagnosis and treatment, and for some, the BCG vaccine.",
+                        faq: "Q: Is TB curable? A: Yes, TB is curable with a full course of antibiotics."
+                    },
+                    {
+                        title: "Malaria",
+                        content: "Malaria is a life-threatening disease caused by parasites that are transmitted to people through the bites of infected female Anopheles mosquitoes. Symptoms include fever, chills, headache, and vomiting. Prevention includes mosquito bite avoidance (nets, repellents), and antimalarial drugs.",
+                        faq: "Q: Can malaria be cured? A: Yes, malaria can be cured with appropriate treatment, especially when diagnosed early."
+                    },
+                    {
+                        title: "Dengue Fever",
+                        content: "Dengue is a mosquito-borne viral infection causing severe flu-like illness and, sometimes, a potentially lethal complication called severe dengue. Symptoms include high fever, severe headache, pain behind the eyes, muscle and joint pains, and rash. Prevention focuses on controlling mosquito populations and avoiding mosquito bites.",
+                        faq: "Q: Is there a vaccine for Dengue? A: A dengue vaccine is available in some regions for individuals with a confirmed prior dengue infection."
+                    }
+                ],
+                infographics: []
+            },
+            'non-communicable': {
+                title: "Non-Communicable Diseases",
+                description: "These are chronic diseases that are not passed from person to person.",
+                articles: [
+                    {
+                        title: "Understanding Diabetes",
+                        content: "Diabetes is a chronic disease where the body cannot properly produce or use insulin. This leads to high blood sugar levels. Lifestyle changes, like a healthy diet and exercise, can help manage it. There are different types, primarily Type 1 and Type 2.",
+                        faq: "Q: What is the normal range for blood sugar? A: Fasting blood sugar less than 100 mg/dL is normal."
+                    },
+                    {
+                        title: "Hypertension (High Blood Pressure)",
+                        content: "Hypertension is a serious medical condition where blood pressure is elevated. It can lead to heart disease, stroke, and kidney failure. Often called a 'silent killer' because it may have no obvious symptoms. Lifestyle factors like a low-salt diet, regular exercise, maintaining a healthy weight, and stress management are crucial for control.",
+                        faq: "Q: Can hypertension be cured? A: It often requires lifelong management, but lifestyle changes can significantly control it."
+                    },
+                    {
+                        title: "Heart Health",
+                        content: "Cardiovascular diseases are the leading cause of death globally. Maintaining a healthy weight, exercising regularly, avoiding smoking, managing blood pressure and cholesterol are crucial for a healthy heart. Regular check-ups are also important.",
+                        faq: "Q: What are the warning signs of a heart attack? A: Chest pain, shortness of breath, pain in the left arm, and lightheadedness."
+                    },
+                    {
+                        title: "Cancer Awareness",
+                        content: "Cancer is a group of diseases involving abnormal cell growth with the potential to invade or spread to other parts of the body. Early detection, healthy lifestyle (no smoking, balanced diet, exercise), and regular screenings are vital for prevention and successful treatment.",
+                        faq: "Q: Can diet affect cancer risk? A: Yes, a diet rich in fruits and vegetables can help reduce risk."
+                    }
+                ],
+                infographics: []
+            },
+            lifestyle: {
+                title: "Lifestyle Diseases",
+                description: "These are diseases associated with how a person lives and can be prevented or managed through behavioral changes.",
+                articles: [
+                    {
+                        title: "The Dangers of Smoking",
+                        content: "Smoking is the leading cause of preventable death. It is linked to lung cancer, heart disease, stroke, and many other health issues. Quitting smoking can significantly improve your health and quality of life, even years after quitting.",
+                        faq: "Q: What are the immediate benefits of quitting smoking? A: Blood pressure and heart rate drop, circulation improves, and lung function increases within weeks."
+                    },
+                    {
+                        title: "Obesity and its Risks",
+                        content: "Obesity is a medical condition characterized by excessive body fat accumulation, increasing the risk of serious health problems such as heart disease, diabetes, certain cancers, and joint problems. It's often caused by a combination of genetics, diet, physical inactivity, and environmental factors. A balanced diet and regular physical activity are key to prevention and management.",
+                        faq: "Q: What are healthy ways to manage weight? A: Gradual changes to diet, increased physical activity, and consulting with healthcare professionals."
+                    },
+                    {
+                        title: "Balanced Diet for Wellness",
+                        content: "A balanced diet provides your body with the essential nutrients, vitamins, and minerals it needs to function correctly. This includes a mix of fruits, vegetables, whole grains, lean proteins, and healthy fats. It's crucial for energy, growth, and disease prevention.",
+                        faq: "Q: How many servings of fruits and vegetables should I eat daily? A: Aim for at least 5 servings combined per day."
+                    },
+                    {
+                        title: "Importance of Physical Activity",
+                        content: "Regular physical activity is vital for maintaining overall health and preventing chronic diseases. It strengthens your heart and lungs, improves mood, helps manage weight, and boosts energy levels. Adults should aim for at least 150 minutes of moderate-intensity activity per week.",
+                        faq: "Q: What counts as moderate-intensity activity? A: Brisk walking, swimming, cycling, dancing, or gardening."
+                    }
+                ],
+                infographics: []
+            }
+        };
+
+        function renderCategoryContent(category) {
+            const data = libraryData[category];
+            if (!data) return;
+
+            let html = `<h3 class="font-bold text-xl mb-4">${data.title}</h3><p class="mb-6 text-sm">${data.description}</p>`;
+            
+            data.articles.forEach(article => {
+                html += `<div class="library-article">
+                    <h4 class="font-bold text-xl mb-2 text-indigo-700">${article.title}</h4>
+                    <p class="text-gray-600 mb-4">${article.content}</p>
+                    <div class="italic text-sm text-gray-500">${article.faq}</div>
+                </div>`;
+            });
+            
+            libraryContent.innerHTML = html;
+        }
+
+        learnButton.addEventListener('click', () => {
+            libraryModal.style.display = 'flex';
+            renderCategoryContent('communicable');
+        });
+
+        closeModalButton.addEventListener('click', () => {
+            libraryModal.style.display = 'none';
+        });
+
+        categoryTabs.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('category-tab')) {
+                document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
+                target.classList.add('active');
+                const category = target.getAttribute('data-category');
+                renderCategoryContent(category);
+            }
+        });
+    </script>
+</body>
+</html>
